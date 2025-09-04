@@ -42,7 +42,8 @@ export default function Home() {
           </div>
         </div>
         <footer className="mt-12 text-center text-sm text-gray-500 dark:text-gray-400">
-          © {new Date().getFullYear()} Create by Winchanut
+          © {new Date().getFullYear()} Created by Winchanut! All rights
+          reserved.
         </footer>
       </div>
     </main>
