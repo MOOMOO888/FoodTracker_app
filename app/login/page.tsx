@@ -1,24 +1,46 @@
 "use client";
-
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 export default function Login() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  // Function for handling form input changes
+  // handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  // handle login
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login Data:", formData);
-    alert("Login successful!"); // Use a custom modal in a real application instead of alert()
+    setError(null);
+
+    if (
+      formData.email === "test@example.com" &&
+      formData.password === "123456"
+    ) {
+      Swal.fire({
+        title: "เข้าสู่ระบบสำเร็จ!",
+        text: "กำลังพาคุณไปที่ Dashboard 🚀",
+        icon: "success",
+        confirmButtonText: "ตกลง",
+        confirmButtonColor: "#1e293b", // slate-800
+      }).then(() => {
+        router.push("/dashboard");
+      });
+    } else {
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด!",
+        text: "อีเมลหรือรหัสผ่านไม่ถูกต้อง ❌",
+        icon: "error",
+        confirmButtonText: "ลองใหม่",
+      });
+    }
   };
 
   return (
@@ -70,18 +92,6 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Register and Home Links */}
-        <p className="text-center text-gray-500 dark:text-gray-400 mt-6">
-          ยังไม่มีบัญชีใช่ไหม?{" "}
-          <Link
-            href="/register"
-            passHref
-            className="text-slate-600 hover:text-slate-800 font-medium transition duration-300"
-          >
-            ลงทะเบียนที่นี่
-          </Link>
-        </p>
-
         <div className="mt-4 text-center">
           <Link
             href="/"
@@ -90,6 +100,17 @@ export default function Login() {
           >
             กลับสู่หน้าหลัก
           </Link>
+          {/* Register and Home Links */}
+          <p className="text-center text-gray-500 dark:text-gray-400 mt-6">
+            ยังไม่มีบัญชีใช่ไหม?{" "}
+            <Link
+              href="/register"
+              passHref
+              className="text-slate-600 hover:text-slate-800 font-medium transition duration-300"
+            >
+              ลงทะเบียนที่นี่
+            </Link>
+          </p>
         </div>
       </div>
     </main>

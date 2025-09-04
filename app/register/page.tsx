@@ -177,16 +177,6 @@ export default function Register() {
         </form>
 
         {/* Login and Home Links */}
-        <p className="text-center text-gray-500 dark:text-gray-400 mt-6">
-          มีบัญชีอยู่แล้ว?{" "}
-          <Link
-            href="/login"
-            passHref
-            className="text-slate-600 hover:text-slate-800 font-medium transition duration-300"
-          >
-            เข้าสู่ระบบที่นี่
-          </Link>
-        </p>
 
         <div className="mt-4 text-center">
           <Link
@@ -196,6 +186,16 @@ export default function Register() {
           >
             กลับสู่หน้าหลัก
           </Link>
+          <p className="text-center text-gray-500 dark:text-gray-400 mt-6">
+            มีบัญชีอยู่แล้ว?{" "}
+            <Link
+              href="/login"
+              passHref
+              className="text-slate-600 hover:text-slate-800 font-medium transition duration-300"
+            >
+              เข้าสู่ระบบที่นี่
+            </Link>
+          </p>
         </div>
       </div>
     </main>
