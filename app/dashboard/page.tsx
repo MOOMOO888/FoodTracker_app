@@ -3,6 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
+
+// Mock data for a logged-in user
+const mockUser = {
+  firstName: "John",
+  lastName: "Doe",
+  profileImageUrl: "https://picsum.photos/id/237/200/300",
+};
 
 // Mock data for demonstration
 const mockFoodEntries = [
@@ -117,7 +126,7 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
+  const router = useRouter();
   // Filter food entries based on search term
   const filteredEntries = mockFoodEntries.filter((entry) =>
     entry.foodName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -135,41 +144,152 @@ export default function Dashboard() {
   };
 
   const handleEdit = (id: number) => {
-    alert(`แก้ไขรายการอาหาร ID: ${id}`);
-    // In a real app, this would redirect to an edit page or open a modal.
+    Swal.fire({
+      title: "แก้ไขรายการอาหาร",
+      text: `คุณต้องการแก้ไขรายการอาหาร ID: ${id} หรือไม่?`,
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonText: "แก้ไข",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#3B82F6",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "กำลังไปหน้าแก้ไข...",
+          icon: "success",
+          timer: 1000,
+          showConfirmButton: false,
+        });
+        router.push(`/updateFood/${id}`);
+      }
+    });
   };
 
   const handleDelete = (id: number) => {
-    alert(`ลบรายการอาหาร ID: ${id}`);
-    // In a real app, this would trigger a deletion and UI update.
+    Swal.fire({
+      title: "ลบรายการอาหาร",
+      text: `คุณแน่ใจว่าต้องการลบรายการอาหาร ID: ${id}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "ลบ",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#EF4444",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "ลบรายการสำเร็จ!",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        // TODO: ลบจาก state หรือเรียก API
+      }
+    });
+  };
+
+  const handleLogout = () => {
+    Swal.fire({
+      title: "ออกจากระบบ",
+      text: "คุณแน่ใจว่าต้องการออกจากระบบ?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "ใช่ ออกจากระบบ",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#EF4444",
+      cancelButtonColor: "#9CA3AF",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "ออกจากระบบสำเร็จ!",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        }).then(() => {
+          router.push("/login"); // ✅ กลับไปหน้า login
+        });
+      }
+    });
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 dark:bg-slate-900 text-gray-900 dark:text-white p-6 md:p-12">
+    <main className="min-h-screen bg-slate-100 dark:bg-slate-900 text-gray-900 dark:text-white p-6 md:p-8">
       <div className="container mx-auto">
-        <Link
-          href="/"
-          passHref
-          className="absolute top-6 left-6 flex items-center space-x-1 text-slate-600 hover:text-slate-800 transition-colors duration-300"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="lucide lucide-arrow-left"
-          >
-            <path d="m12 19-7-7 7-7" />
-            <path d="M19 12H5" />
-          </svg>
-          <span className="font-medium">กลับสู่หน้าหลัก</span>
-        </Link>
-        <h1 className="text-4xl font-extrabold text-center mb-10">แดชบอร์ด</h1>
+        <div className="flex items-center justify-between w-full mb-10">
+          {/* Left: Back Button */}
+          <div className="flex items-center">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 text-slate-600 hover:text-slate-800 transition-colors duration-300"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-arrow-left"
+              >
+                <path d="m12 19-7-7 7-7" />
+                <path d="M19 12H5" />
+              </svg>
+              <span className="font-medium text-lg hidden md:inline">
+                กลับสู่หน้าหลัก
+              </span>
+            </Link>
+          </div>
+
+          {/* Center: Title */}
+          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl md:text-4xl font-extrabold text-gray-900 dark:text-white">
+            แดชบอร์ด
+          </h1>
+
+          {/* Right: User Profile + Logout */}
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/profile"
+              className="flex items-center space-x-2 p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            >
+              <Image
+                src={mockUser.profileImageUrl}
+                alt={`${mockUser.firstName} ${mockUser.lastName}'s profile picture`}
+                width={40}
+                height={40}
+                className="rounded-full object-cover w-10 h-10"
+              />
+              <span className="font-semibold text-gray-800 dark:text-gray-200">
+                {mockUser.firstName} {mockUser.lastName}
+              </span>
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="group flex items-center w-14 h-10 bg-red-500 text-white rounded-full shadow-lg overflow-hidden transition-all duration-300 hover:w-42 px-2"
+            >
+              <div className="flex items-center justify-center w-10 h-10 flex-shrink-0">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-6 h-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7"
+                  />
+                </svg>
+              </div>
+              <span className="ml-2 font-semibold whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                ออกจากระบบ
+              </span>
+            </button>
+          </div>
+        </div>
 
         {/* Action Bar: Search and Add Food Button */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 space-y-4 md:space-y-0 md:space-x-4">
@@ -322,8 +442,6 @@ export default function Dashboard() {
             ถัดไป
           </button>
         </div>
-
-        <div className="mt-12 text-center"></div>
       </div>
     </main>
   );
