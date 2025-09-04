@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -13,6 +13,7 @@ export default function Register() {
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
 
   // Function for handling form input changes
   const handleInputChange = (
@@ -28,15 +29,30 @@ export default function Register() {
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setImagePreview(imageUrl);
+      setProfileImageFile(file);
     } else {
       setImagePreview(null);
+      setProfileImageFile(null);
+    }
+  };
+
+  // Function to remove the selected image
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setProfileImageFile(null);
+    // You might also want to reset the file input field, but it's not strictly necessary for functionality.
+    const fileInput = document.getElementById(
+      "profile-image"
+    ) as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = "";
     }
   };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Registration Data:", formData);
-    console.log("Image File:", imagePreview);
+    console.log("Image File:", profileImageFile);
     alert("Registration successful!"); // Use a custom modal in a real application instead of alert()
   };
 
@@ -80,6 +96,15 @@ export default function Register() {
               onChange={handleImageChange}
               className="hidden"
             />
+            {imagePreview && (
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="mt-2 text-sm text-red-600 hover:text-red-800 transition-colors duration-200"
+              >
+                ลบรูปภาพ
+              </button>
+            )}
           </div>
 
           {/* Form Fields */}
@@ -93,7 +118,7 @@ export default function Register() {
               value={formData.name}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 bg-gray-300 text-gray-900 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 bg-white text-gray-900 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50"
             />
           </div>
 
@@ -107,7 +132,7 @@ export default function Register() {
               value={formData.email}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 bg-gray-300 text-gray-900 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 bg-white text-gray-900 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50"
             />
           </div>
 
@@ -121,7 +146,7 @@ export default function Register() {
               value={formData.password}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 bg-gray-300 text-gray-900 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 bg-white text-gray-900 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50"
             />
           </div>
 
@@ -133,7 +158,7 @@ export default function Register() {
               name="gender"
               value={formData.gender}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50 bg-gray-300 text-gray-900"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50 bg-white text-gray-900"
             >
               <option value="">เลือกเพศ...</option>
               <option value="male">ชาย</option>
@@ -151,7 +176,7 @@ export default function Register() {
           </button>
         </form>
 
-        {/* Login Link */}
+        {/* Login and Home Links */}
         <p className="text-center text-gray-500 dark:text-gray-400 mt-6">
           มีบัญชีอยู่แล้ว?{" "}
           <Link
@@ -162,6 +187,16 @@ export default function Register() {
             เข้าสู่ระบบที่นี่
           </Link>
         </p>
+
+        <div className="mt-4 text-center">
+          <Link
+            href="/"
+            passHref
+            className="inline-block w-full py-3 px-4 text-center font-semibold text-slate-600 bg-transparent border-2 border-slate-600 hover:bg-slate-600 hover:text-white rounded-full transition-colors duration-300 transform hover:scale-105"
+          >
+            กลับสู่หน้าหลัก
+          </Link>
+        </div>
       </div>
     </main>
   );

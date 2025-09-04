@@ -30,12 +30,12 @@ export default function Home() {
           {/* Action Buttons */}
           <div className="flex flex-col space-y-4 w-full">
             <Link href="/login">
-              <button className="w-full px-6 py-3 text-lg font-semibold text-green-600 bg-white border-2 border-white hover:bg-green-600 hover:text-white rounded-full transition-colors duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+              <button className="w-full px-6 py-3 text-lg font-semibold text-green-600 bg-white border-2 border-gray-400 hover:bg-green-600 hover:text-white rounded-full transition-colors duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                 Login
               </button>
             </Link>
             <Link href="/register">
-              <button className="w-full px-6 py-3 text-lg font-semibold text-green-600 bg-white border-2 border-white hover:bg-blue-500 hover:text-white rounded-full transition-colors duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+              <button className="w-full px-6 py-3 text-lg font-semibold text-green-600 bg-white border-2 border-gray-400 hover:bg-blue-500 hover:text-white rounded-full transition-colors duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                 Register
               </button>
             </Link>
