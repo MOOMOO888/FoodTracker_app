@@ -11,9 +11,7 @@ export default function Home() {
         <h1 className="text-5xl font-bold text-gray-800 dark:text-white mb-2">
           Welcome to Food Tracker
         </h1>
-        <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
-          Track your meals!!!
-        </p>
+        <p className="text-xl text-gray-600 dark:text-gray-400 mb-8"></p>
 
         {/* Card Section */}
         <div className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 max-w-sm mx-auto">
