@@ -1,20 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Swal from "sweetalert2";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 export default function AddFoodPage() {
+  // Supabase client
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+
+  // Form state
   const [foodName, setFoodName] = useState("");
-  const [meal, setMeal] = useState("Breakfast"); // เปลี่ยนจาก mealType เป็น meal
+  const [meal, setMeal] = useState("Breakfast");
   const [foodDate, setFoodDate] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
+  // Initialize Supabase client & get logged in user
   useEffect(() => {
+    const supabaseClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    setSupabase(supabaseClient);
+
     const user = localStorage.getItem("loggedInUser");
     if (!user) {
       Swal.fire("กรุณาล็อกอินก่อน", "", "warning");
@@ -23,60 +34,71 @@ export default function AddFoodPage() {
     setUserId(JSON.parse(user).id);
   }, []);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle image change
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+    setImageFile(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  // Handle form submit
+  const handleSave = async (e: FormEvent) => {
     e.preventDefault();
-    if (!foodName || !foodDate || !imageFile || !userId) {
+
+    if (!foodName || !foodDate || !imageFile || !userId || !supabase) {
       Swal.fire("กรุณากรอกข้อมูลให้ครบถ้วน", "", "error");
       return;
     }
 
-    // อัปโหลดรูปภาพไป Supabase Storage
-    const fileName = `${Date.now()}_${imageFile.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from("food_bk")
-      .upload(fileName, imageFile);
+    try {
+      // Upload image to Supabase Storage
+      const fileName = `${Date.now()}_${imageFile.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("food_bk")
+        .upload(fileName, imageFile);
 
-    if (uploadError) {
-      Swal.fire("เกิดข้อผิดพลาดในการอัปโหลดรูป", uploadError.message, "error");
-      return;
-    }
+      if (uploadError) {
+        Swal.fire(
+          "เกิดข้อผิดพลาดในการอัปโหลดรูป",
+          uploadError.message,
+          "error"
+        );
+        return;
+      }
 
-    const { data: urlData } = supabase.storage
-      .from("food_bk")
-      .getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage
+        .from("food_bk")
+        .getPublicUrl(fileName);
+      const image_url = urlData?.publicUrl || null;
 
-    const image_url = urlData?.publicUrl || null;
+      // Insert into database
+      const { error } = await supabase.from("food_tb").insert([
+        {
+          foodname: foodName,
+          meal,
+          fooddate_at: foodDate,
+          food_image_url: image_url,
+          user_id: userId,
+        },
+      ]);
 
-    // บันทึกลงฐานข้อมูล
-    const { error } = await supabase.from("food_tb").insert([
-      {
-        foodname: foodName,
-        meal: meal, // เปลี่ยนตรงนี้ให้ตรงกับคอลัมน์จริง
-        fooddate_at: foodDate,
-        food_image_url: image_url,
-        user_id: userId,
-      },
-    ]);
-
-    if (error) {
-      Swal.fire("เกิดข้อผิดพลาด", error.message, "error");
-    } else {
-      Swal.fire("บันทึกสำเร็จ!", "", "success");
-      setFoodName("");
-      setMeal("Breakfast");
-      setFoodDate("");
-      setImageFile(null);
-      setImagePreview(null);
+      if (error) {
+        Swal.fire("เกิดข้อผิดพลาด", error.message, "error");
+      } else {
+        Swal.fire("บันทึกสำเร็จ!", "", "success");
+        setFoodName("");
+        setMeal("Breakfast");
+        setFoodDate("");
+        setImageFile(null);
+        setImagePreview(null);
+      }
+    } catch (err) {
+      Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้", "error");
+      console.error(err);
     }
   };
 
