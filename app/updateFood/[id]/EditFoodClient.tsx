@@ -7,13 +7,17 @@ import Image from "next/image";
 import Swal from "sweetalert2";
 import { createClient } from "@supabase/supabase-js";
 
-// 🔹 ตั้งค่า Supabase client
+// 🔹 สร้าง Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default function EditFoodClient({ id }: { id: string }) {
+type EditFoodClientProps = {
+  id: string;
+};
+
+export default function EditFoodClient({ id }: EditFoodClientProps) {
   const router = useRouter();
 
   const [foodName, setFoodName] = useState("");
@@ -23,7 +27,7 @@ export default function EditFoodClient({ id }: { id: string }) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // โหลดข้อมูลอาหารจาก Supabase
+  // 🔹 โหลดข้อมูลอาหารจาก Supabase
   useEffect(() => {
     const fetchFoodById = async () => {
       const { data, error } = await supabase
@@ -46,7 +50,7 @@ export default function EditFoodClient({ id }: { id: string }) {
     fetchFoodById();
   }, [id]);
 
-  // เมื่อเลือกรูปภาพใหม่
+  // 🔹 เมื่อเลือกรูปภาพใหม่
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -57,7 +61,7 @@ export default function EditFoodClient({ id }: { id: string }) {
     }
   };
 
-  // อัปเดตข้อมูล
+  // 🔹 อัปเดตข้อมูลอาหาร
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -67,13 +71,12 @@ export default function EditFoodClient({ id }: { id: string }) {
     }
 
     setLoading(true);
-
     let imageUrl = imagePreview;
 
-    // ถ้ามีการเลือกรูปใหม่ → อัปโหลด Supabase
+    // อัปโหลดรูปใหม่ถ้ามี
     if (imageFile) {
       const fileName = `${Date.now()}_${imageFile.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("food_bk")
         .upload(fileName, imageFile);
 
@@ -87,16 +90,16 @@ export default function EditFoodClient({ id }: { id: string }) {
         return;
       }
 
-      // ดึง URL จริง
       const { data: urlData } = supabase.storage
         .from("food_bk")
         .getPublicUrl(fileName);
+
       imageUrl = urlData?.publicUrl || null;
     }
 
-    // อัปเดตข้อมูลใน database
+    // อัปเดตข้อมูลในฐานข้อมูล
     const { error } = await supabase
-      .from("food_tb") // ✅ ใช้ชื่อ table เดียวกับตอนดึงข้อมูล
+      .from("food_tb")
       .update({
         foodname: foodName,
         mealtype: mealType,
@@ -194,6 +197,7 @@ export default function EditFoodClient({ id }: { id: string }) {
                 onChange={(e) => setMealType(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-slate-500"
               >
+                <option value="">เลือกมื้ออาหาร</option>
                 <option value="Breakfast">อาหารเช้า</option>
                 <option value="Lunch">อาหารกลางวัน</option>
                 <option value="Dinner">อาหารเย็น</option>

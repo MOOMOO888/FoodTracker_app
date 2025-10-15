@@ -41,11 +41,11 @@ export default function AddFoodPage() {
       return;
     }
 
-    // 🔹 อัปโหลดรูปภาพไป Supabase Storage (optional)
-    let image_url = null;
+    // อัปโหลดรูปภาพ
+    let image_url: string | null = null;
     const fileName = `${Date.now()}_${imageFile.name}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("food_bk") // สร้าง bucket ชื่อ food_bk
+    const { error: uploadError } = await supabase.storage
+      .from("food_bk")
       .upload(fileName, imageFile);
 
     if (uploadError) {
@@ -53,15 +53,17 @@ export default function AddFoodPage() {
       return;
     }
 
-    image_url = supabase.storage.from("food_bk").getPublicUrl(fileName)
-      .data.publicUrl;
+    const { data: urlData } = supabase.storage
+      .from("food_bk")
+      .getPublicUrl(fileName);
+    image_url = urlData?.publicUrl || null;
 
-    // 🔹 บันทึกลง database
-    const { data, error } = await supabase.from("food_tb").insert([
+    // บันทึกลง database
+    const { error } = await supabase.from("food_tb").insert([
       {
         foodname: foodName,
-        meal: mealType,
-        fooddate_at: date,
+        mealtype: mealType,
+        date,
         food_image_url: image_url,
         user_id: userId,
       },
