@@ -5,17 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import Swal from "sweetalert2";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 
-// 🔹 สร้าง Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-type EditFoodClientProps = {
-  id: string;
-};
+type EditFoodClientProps = { id: string };
 
 export default function EditFoodClient({ id }: EditFoodClientProps) {
   const router = useRouter();
@@ -27,7 +19,6 @@ export default function EditFoodClient({ id }: EditFoodClientProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 โหลดข้อมูลอาหารจาก Supabase
   useEffect(() => {
     const fetchFoodById = async () => {
       const { data, error } = await supabase
@@ -41,16 +32,14 @@ export default function EditFoodClient({ id }: EditFoodClientProps) {
       } else if (data) {
         setFoodName(data.foodname || "");
         setMealType(data.mealtype || "");
-        setDate(data.date || "");
+        setDate(data.fooddate_at || "");
         setImagePreview(data.food_image_url || null);
       }
       setLoading(false);
     };
-
     fetchFoodById();
   }, [id]);
 
-  // 🔹 เมื่อเลือกรูปภาพใหม่
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -61,7 +50,6 @@ export default function EditFoodClient({ id }: EditFoodClientProps) {
     }
   };
 
-  // 🔹 อัปเดตข้อมูลอาหาร
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -103,7 +91,7 @@ export default function EditFoodClient({ id }: EditFoodClientProps) {
       .update({
         foodname: foodName,
         mealtype: mealType,
-        date,
+        fooddate_at: date,
         food_image_url: imageUrl,
       })
       .eq("id", id);
