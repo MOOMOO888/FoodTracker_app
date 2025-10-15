@@ -1,11 +1,10 @@
 import EditFoodClient from "./EditFoodClient";
 
-// ✅ ต้อง async และ await params (Next.js 15)
 export default async function Page({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string }; // Server Component
 }) {
-  const { id } = await params;
-  return <EditFoodClient id={id} />;
+  // params ไม่ต้องเป็น Promise ใน server component
+  return <EditFoodClient id={params.id} />;
 }
