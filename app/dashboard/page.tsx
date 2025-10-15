@@ -37,7 +37,7 @@ export default function Dashboard() {
       return;
     }
     setUserProfile(JSON.parse(user));
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const fetchFoodEntries = async () => {
