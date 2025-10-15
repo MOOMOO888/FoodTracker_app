@@ -8,13 +8,12 @@ import { supabase } from "@/lib/supabaseClient";
 
 export default function AddFoodPage() {
   const [foodName, setFoodName] = useState("");
-  const [mealType, setMealType] = useState("Breakfast");
-  const [date, setDate] = useState("");
+  const [meal, setMeal] = useState("Breakfast"); // เปลี่ยนจาก mealType เป็น meal
+  const [foodDate, setFoodDate] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // 🔹 ดึง user id จาก localStorage
   useEffect(() => {
     const user = localStorage.getItem("loggedInUser");
     if (!user) {
@@ -36,13 +35,12 @@ export default function AddFoodPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!foodName || !date || !imageFile || !userId) {
+    if (!foodName || !foodDate || !imageFile || !userId) {
       Swal.fire("กรุณากรอกข้อมูลให้ครบถ้วน", "", "error");
       return;
     }
 
-    // อัปโหลดรูปภาพ
-    let image_url: string | null = null;
+    // อัปโหลดรูปภาพไป Supabase Storage
     const fileName = `${Date.now()}_${imageFile.name}`;
     const { error: uploadError } = await supabase.storage
       .from("food_bk")
@@ -56,14 +54,15 @@ export default function AddFoodPage() {
     const { data: urlData } = supabase.storage
       .from("food_bk")
       .getPublicUrl(fileName);
-    image_url = urlData?.publicUrl || null;
 
-    // บันทึกลง database
+    const image_url = urlData?.publicUrl || null;
+
+    // บันทึกลงฐานข้อมูล
     const { error } = await supabase.from("food_tb").insert([
       {
         foodname: foodName,
-        mealtype: mealType,
-        date,
+        meal: meal, // เปลี่ยนตรงนี้ให้ตรงกับคอลัมน์จริง
+        fooddate_at: foodDate,
         food_image_url: image_url,
         user_id: userId,
       },
@@ -73,10 +72,9 @@ export default function AddFoodPage() {
       Swal.fire("เกิดข้อผิดพลาด", error.message, "error");
     } else {
       Swal.fire("บันทึกสำเร็จ!", "", "success");
-      // Reset form
       setFoodName("");
-      setMealType("Breakfast");
-      setDate("");
+      setMeal("Breakfast");
+      setFoodDate("");
       setImageFile(null);
       setImagePreview(null);
     }
@@ -139,10 +137,10 @@ export default function AddFoodPage() {
               required
             />
 
-            {/* Meal Type */}
+            {/* Meal */}
             <select
-              value={mealType}
-              onChange={(e) => setMealType(e.target.value)}
+              value={meal}
+              onChange={(e) => setMeal(e.target.value)}
               className="w-full mb-4 px-4 py-3 rounded-xl border dark:bg-gray-700"
               required
             >
@@ -155,8 +153,8 @@ export default function AddFoodPage() {
             {/* Date */}
             <input
               type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+              value={foodDate}
+              onChange={(e) => setFoodDate(e.target.value)}
               className="w-full mb-4 px-4 py-3 rounded-xl border dark:bg-gray-700"
               required
             />

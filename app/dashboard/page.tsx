@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabaseClient";
 interface FoodEntry {
   id: string;
   foodname: string | null;
-  meal: string | null;
+  mealtype: string | null;
   fooddate_at: string | null;
   food_image_url: string | null;
   user_id: string;
@@ -30,42 +30,36 @@ export default function Dashboard() {
   const itemsPerPage = 10;
   const router = useRouter();
 
-  // โหลด session จาก localStorage
-  const loadUserProfile = () => {
+  useEffect(() => {
     const user = localStorage.getItem("loggedInUser");
     if (!user) {
       router.push("/login");
       return;
     }
     setUserProfile(JSON.parse(user));
-  };
-
-  // Fetch foods จาก Supabase
-  const fetchFoodEntries = async () => {
-    if (!userProfile) return;
-
-    const { data, error } = await supabase
-      .from("food_tb")
-      .select("*")
-      .eq("user_id", userProfile.id)
-      .order("fooddate_at", { ascending: false });
-
-    if (!error && data) setFoodEntries(data as FoodEntry[]);
-    if (error) Swal.fire("เกิดข้อผิดพลาด", error.message, "error");
-  };
-
-  useEffect(() => {
-    loadUserProfile();
   }, []);
 
   useEffect(() => {
+    const fetchFoodEntries = async () => {
+      if (!userProfile) return;
+      const { data, error } = await supabase
+        .from("food_tb")
+        .select("*")
+        .eq("user_id", userProfile.id)
+        .order("fooddate_at", { ascending: false });
+
+      if (error) Swal.fire("เกิดข้อผิดพลาด", error.message, "error");
+      else setFoodEntries(data as FoodEntry[]);
+    };
+
     fetchFoodEntries();
   }, [userProfile]);
 
-  // Filter & Pagination
+  // Pagination & Filter
   const filteredEntries = foodEntries.filter((entry) =>
     entry.foodname?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredEntries.slice(indexOfFirstItem, indexOfLastItem);
@@ -73,7 +67,6 @@ export default function Dashboard() {
 
   const handlePageChange = (page: number) => setCurrentPage(page);
 
-  // Edit & Delete
   const handleEdit = (id: string) => {
     Swal.fire({
       title: "แก้ไขรายการอาหาร",
@@ -84,9 +77,7 @@ export default function Dashboard() {
       cancelButtonText: "ยกเลิก",
       confirmButtonColor: "#3B82F6",
     }).then((result) => {
-      if (result.isConfirmed) {
-        router.push(`/updateFood/${id}`);
-      }
+      if (result.isConfirmed) router.push(`/updateFood/${id}`);
     });
   };
 
@@ -103,8 +94,8 @@ export default function Dashboard() {
 
     if (result.isConfirmed) {
       const { error } = await supabase.from("food_tb").delete().eq("id", id);
-      if (!error) fetchFoodEntries();
-      else Swal.fire("เกิดข้อผิดพลาด", error.message, "error");
+      if (error) Swal.fire("เกิดข้อผิดพลาด", error.message, "error");
+      else setFoodEntries(foodEntries.filter((item) => item.id !== id));
     }
   };
 
@@ -117,7 +108,6 @@ export default function Dashboard() {
       confirmButtonText: "ใช่ ออกจากระบบ",
       cancelButtonText: "ยกเลิก",
       confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#9CA3AF",
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.removeItem("loggedInUser");
@@ -177,7 +167,7 @@ export default function Dashboard() {
               className="w-full py-2 px-4 pr-12 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-slate-500 transition-shadow"
             />
           </div>
-          <Link href="/addfood" passHref className="w-full md:w-auto">
+          <Link href="/addFood" passHref className="w-full md:w-auto">
             <button className="w-full px-6 py-3 bg-green-600 text-white font-semibold rounded-full shadow-lg hover:bg-green-700 transition-colors duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
               + เพิ่มอาหาร
             </button>
@@ -235,7 +225,7 @@ export default function Dashboard() {
                       {entry.foodname}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                      {entry.meal}
+                      {entry.mealtype}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
                       <button

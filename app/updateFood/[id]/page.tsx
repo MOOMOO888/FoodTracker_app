@@ -1,10 +1,13 @@
-import EditFoodClient from "./EditFoodClient";
+"use client";
 
-export default async function Page({
-  params,
-}: {
-  params: { id: string }; // Server Component
-}) {
-  // params ไม่ต้องเป็น Promise ใน server component
-  return <EditFoodClient id={params.id} />;
+import EditFoodClient from "./EditFoodClient";
+import { use } from "react"; // React 18+ / Next.js 15+
+
+interface Params {
+  id: string;
+}
+
+export default function Page({ params }: { params: Promise<Params> }) {
+  const { id } = use(params); // unwrap promise
+  return <EditFoodClient id={id} />;
 }
