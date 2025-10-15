@@ -3,8 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function Register() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -15,7 +18,6 @@ export default function Register() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
 
-  // Function for handling form input changes
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -23,7 +25,6 @@ export default function Register() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Function for handling profile image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -36,24 +37,58 @@ export default function Register() {
     }
   };
 
-  // Function to remove the selected image
   const handleRemoveImage = () => {
     setImagePreview(null);
     setProfileImageFile(null);
-    // You might also want to reset the file input field, but it's not strictly necessary for functionality.
     const fileInput = document.getElementById(
       "profile-image"
     ) as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = "";
-    }
+    if (fileInput) fileInput.value = "";
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Registration Data:", formData);
-    console.log("Image File:", profileImageFile);
-    alert("Registration successful!"); // Use a custom modal in a real application instead of alert()
+
+    try {
+      let imageUrl: string | null = null;
+
+      if (profileImageFile) {
+        const fileName = `${Date.now()}-${profileImageFile.name}`;
+        const { error } = await supabase.storage
+          .from("user_bk")
+          .upload(fileName, profileImageFile);
+
+        if (error) throw error;
+
+        const { data: publicUrl } = supabase.storage
+          .from("user_bk")
+          .getPublicUrl(fileName);
+        imageUrl = publicUrl.publicUrl;
+      }
+
+      const { error: insertError } = await supabase.from("user_tb").insert([
+        {
+          fullname: formData.name,
+          email: formData.email,
+          password: formData.password, // ❗เข้ารหัสใน production
+          gender: formData.gender,
+          user_image_url: imageUrl,
+        },
+      ]);
+
+      if (insertError) throw insertError;
+
+      // ✅ แทน alert ให้ redirect ไปหน้า login
+      router.push("/login");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Register error:", err.message);
+        alert("เกิดข้อผิดพลาด: " + err.message);
+      } else {
+        console.error("Unknown error:", err);
+        alert("เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+      }
+    }
   };
 
   return (
@@ -67,15 +102,15 @@ export default function Register() {
         </p>
 
         <form onSubmit={handleRegister} className="space-y-6">
-          {/* Profile Image Upload Section */}
+          {/* Upload Image */}
           <div className="flex flex-col items-center">
             {imagePreview ? (
               <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md">
                 <Image
                   src={imagePreview}
                   alt="Image Preview"
-                  layout="fill"
-                  objectFit="cover"
+                  fill
+                  style={{ objectFit: "cover" }}
                 />
               </div>
             ) : (
@@ -118,7 +153,7 @@ export default function Register() {
               value={formData.name}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 bg-white text-gray-900 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3"
             />
           </div>
 
@@ -132,7 +167,7 @@ export default function Register() {
               value={formData.email}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 bg-white text-gray-900 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3"
             />
           </div>
 
@@ -146,7 +181,7 @@ export default function Register() {
               value={formData.password}
               onChange={handleInputChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 bg-white text-gray-900 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3"
             />
           </div>
 
@@ -158,7 +193,7 @@ export default function Register() {
               name="gender"
               value={formData.gender}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 focus:border-slate-700 focus:ring focus:ring-slate-700 focus:ring-opacity-50 bg-white text-gray-900"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3"
             >
               <option value="">เลือกเพศ...</option>
               <option value="male">ชาย</option>
@@ -167,7 +202,6 @@ export default function Register() {
             </select>
           </div>
 
-          {/* Register Button */}
           <button
             type="submit"
             className="w-full py-3 px-4 bg-slate-700 text-white font-semibold rounded-full shadow-lg hover:bg-slate-800 transition duration-300 transform hover:scale-105"
@@ -175,8 +209,6 @@ export default function Register() {
             ลงทะเบียน
           </button>
         </form>
-
-        {/* Login and Home Links */}
 
         <div className="mt-4 text-center">
           <Link
@@ -191,7 +223,7 @@ export default function Register() {
             <Link
               href="/login"
               passHref
-              className="text-slate-600 hover:text-slate-800 font-medium transition duration-300"
+              className="text-slate-600 hover:text-slate-800 font-medium"
             >
               เข้าสู่ระบบที่นี่
             </Link>
