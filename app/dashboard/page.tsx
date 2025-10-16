@@ -30,6 +30,7 @@ export default function Dashboard() {
   const itemsPerPage = 10;
   const router = useRouter();
 
+  // ตรวจสอบ login
   useEffect(() => {
     const user = localStorage.getItem("loggedInUser");
     if (!user) {
@@ -39,27 +40,35 @@ export default function Dashboard() {
     setUserProfile(JSON.parse(user));
   }, [router]);
 
+  // ดึงข้อมูลอาหารจาก Supabase **เฉพาะ client-side**
   useEffect(() => {
     const fetchFoodEntries = async () => {
       if (!userProfile) return;
-      const { data, error } = await supabase
-        .from("food_tb")
-        .select("*")
-        .eq("user_id", userProfile.id)
-        .order("fooddate_at", { ascending: false });
 
-      if (error) Swal.fire("เกิดข้อผิดพลาด", error.message, "error");
-      else setFoodEntries(data as FoodEntry[]);
+      try {
+        const { data, error } = await supabase
+          .from("food_tb")
+          .select("*")
+          .eq("user_id", userProfile.id)
+          .order("fooddate_at", { ascending: false });
+
+        if (error) throw error;
+        setFoodEntries(data as FoodEntry[]);
+      } catch (err: unknown) {
+        // Narrow type
+        const message =
+          err instanceof Error ? err.message : "เกิดข้อผิดพลาดไม่ทราบสาเหตุ";
+        Swal.fire("เกิดข้อผิดพลาด", message, "error");
+      }
     };
 
     fetchFoodEntries();
   }, [userProfile]);
 
-  // Pagination & Filter
+  // Filter + Pagination
   const filteredEntries = foodEntries.filter((entry) =>
     entry.foodname?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredEntries.slice(indexOfFirstItem, indexOfLastItem);
@@ -67,6 +76,7 @@ export default function Dashboard() {
 
   const handlePageChange = (page: number) => setCurrentPage(page);
 
+  // Edit
   const handleEdit = (id: string) => {
     Swal.fire({
       title: "แก้ไขรายการอาหาร",
@@ -81,6 +91,7 @@ export default function Dashboard() {
     });
   };
 
+  // Delete
   const handleDelete = async (id: string) => {
     const result = await Swal.fire({
       title: "ลบรายการอาหาร",
@@ -99,6 +110,7 @@ export default function Dashboard() {
     }
   };
 
+  // Logout
   const handleLogout = () => {
     Swal.fire({
       title: "ออกจากระบบ",
