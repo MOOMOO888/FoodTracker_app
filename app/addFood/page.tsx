@@ -7,10 +7,8 @@ import Swal from "sweetalert2";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 export default function AddFoodPage() {
-  // Supabase client
   const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
-  // Form state
   const [foodName, setFoodName] = useState("");
   const [meal, setMeal] = useState("Breakfast");
   const [foodDate, setFoodDate] = useState("");
@@ -18,7 +16,6 @@ export default function AddFoodPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Initialize Supabase client & get logged in user
   useEffect(() => {
     const supabaseClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,7 +31,6 @@ export default function AddFoodPage() {
     setUserId(JSON.parse(user).id);
   }, []);
 
-  // Handle image change
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -45,7 +41,6 @@ export default function AddFoodPage() {
     reader.readAsDataURL(file);
   };
 
-  // Handle form submit
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -55,7 +50,6 @@ export default function AddFoodPage() {
     }
 
     try {
-      // Upload image to Supabase Storage
       const fileName = `${Date.now()}_${imageFile.name}`;
       const { error: uploadError } = await supabase.storage
         .from("food_bk")
@@ -75,7 +69,6 @@ export default function AddFoodPage() {
         .getPublicUrl(fileName);
       const image_url = urlData?.publicUrl || null;
 
-      // Insert into database
       const { error } = await supabase.from("food_tb").insert([
         {
           foodname: foodName,
