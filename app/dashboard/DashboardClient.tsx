@@ -22,7 +22,7 @@ interface UserProfile {
   user_image_url: string | null;
 }
 
-export default function Dashboard() {
+export default function DashboardClient() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [foodEntries, setFoodEntries] = useState<FoodEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,7 +30,7 @@ export default function Dashboard() {
   const itemsPerPage = 10;
   const router = useRouter();
 
-  // ตรวจสอบ login
+  // Load user from localStorage
   useEffect(() => {
     const user = localStorage.getItem("loggedInUser");
     if (!user) {
@@ -40,11 +40,10 @@ export default function Dashboard() {
     setUserProfile(JSON.parse(user));
   }, [router]);
 
-  // ดึงข้อมูลอาหารจาก Supabase **เฉพาะ client-side**
+  // Fetch food entries from Supabase
   useEffect(() => {
     const fetchFoodEntries = async () => {
       if (!userProfile) return;
-
       try {
         const { data, error } = await supabase
           .from("food_tb")
@@ -55,7 +54,6 @@ export default function Dashboard() {
         if (error) throw error;
         setFoodEntries(data as FoodEntry[]);
       } catch (err: unknown) {
-        // Narrow type
         const message =
           err instanceof Error ? err.message : "เกิดข้อผิดพลาดไม่ทราบสาเหตุ";
         Swal.fire("เกิดข้อผิดพลาด", message, "error");
@@ -65,10 +63,11 @@ export default function Dashboard() {
     fetchFoodEntries();
   }, [userProfile]);
 
-  // Filter + Pagination
+  // Pagination & filter
   const filteredEntries = foodEntries.filter((entry) =>
     entry.foodname?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredEntries.slice(indexOfFirstItem, indexOfLastItem);
