@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx
+// Server Component
 import DashboardClient from "./DashboardClient";
 
 export default function DashboardPage() {
